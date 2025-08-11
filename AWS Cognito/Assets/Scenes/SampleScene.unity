@@ -244,9 +244,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b4564ff3e18a2cf418b38d5813c07c21, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  region: ap-northeast-3
-  userPoolId: ap-northeast-3_4ppH49Y0i
-  clientId: 3p8celb43gt95f568qon4jvpfi
+  region: 
+  userPoolId: 
+  clientId: 
+  identityCode: 
+  newPassword: 
+  clientEmail: 
 --- !u!4 &1421165533
 Transform:
   m_ObjectHideFlags: 0

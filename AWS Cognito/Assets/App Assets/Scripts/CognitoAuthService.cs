@@ -4,6 +4,7 @@ using Amazon.CognitoIdentityProvider.Model;
 using Amazon.Runtime;
 using System.Threading.Tasks;
 using UnityEngine;
+using System;
 
 public class CognitoAuthService : MonoBehaviour
 {
@@ -11,6 +12,9 @@ public class CognitoAuthService : MonoBehaviour
     public string userPoolId;
     public string clientId;
 
+    public string identityCode;
+    public string newPassword;
+    public string clientEmail;
     private AmazonCognitoIdentityProviderClient provider;
 
     private void Awake()
@@ -25,7 +29,7 @@ public class CognitoAuthService : MonoBehaviour
 
     private async void Start()
     {
-        await SignUp("testuser@example.com", "Password123!");
+        await SignIn(clientEmail, newPassword);
     }
 
     private async Task SignUp(string email, string password)
@@ -71,10 +75,71 @@ public class CognitoAuthService : MonoBehaviour
             Debug.Log($"Sign in successful! {response.AuthenticationResult.AccessToken}");
         }
 
-        catch
+        catch(Exception ex)
         {
-            Debug.Log("Sign in failed!");
+            Debug.Log($"Sign in failed! {ex.Message}");
         }
 
+    }
+
+    private async Task ConfirmSignUp(string code, string email)
+    {
+        var request = new ConfirmSignUpRequest
+        {
+            ClientId = clientId,
+            ConfirmationCode = code,
+            Username = email
+        };
+
+        try
+        {
+            var response = await provider.ConfirmSignUpAsync(request);
+            Debug.Log($"Sign up successful! STATUS: {response.HttpStatusCode}");
+        }
+
+        catch
+        {
+            Debug.Log("Confirm sign up failed!");
+        }
+    }
+
+    private async Task ForgotPassword(string email)
+    {
+        ForgotPasswordRequest request = new ForgotPasswordRequest
+        {
+            ClientId = clientId,
+            Username = email
+        };
+
+        try
+        {
+            var response = await provider.ForgotPasswordAsync(request);
+            Debug.Log($"Successful forgot password! STATUS: {response.HttpStatusCode}");
+        }
+        catch (Exception ex) 
+        {
+            Debug.Log($"Forgot password failed! {ex.Message}");
+        }
+    }
+
+    private async Task ConfirmForgetPassword(string email, string code, string password)
+    {
+        ConfirmForgotPasswordRequest request = new ConfirmForgotPasswordRequest
+        {
+            ClientId = clientId,
+            Username = email,
+            ConfirmationCode = code,
+            Password = password
+        };
+
+        try
+        {
+            var response = await provider.ConfirmForgotPasswordAsync(request);
+            Debug.Log($"Successful confirm forget passwor! STATUS: STATUS: {response.HttpStatusCode}");
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Confirm forget password failed: {e.Message}");
+        }
     }
 }
