@@ -2,29 +2,55 @@ using Amazon;
 using Amazon.CognitoIdentityProvider;
 using Amazon.CognitoIdentityProvider.Model;
 using Amazon.Runtime;
+using Amazon.S3;
+using Amazon.S3.Model;
 using System.Threading.Tasks;
 using UnityEngine;
 using System;
+using System.ComponentModel;
+using Unity.VisualScripting;
+using System.Collections.Generic;
+using System.IO;
 
 public class CognitoAuthService : MonoBehaviour
 {
+    public string messageToSend;
+
+    [Header("Core Operations"), Category("AWS Core")]
+
     public string region;
     public string userPoolId;
     public string clientId;
+    public string bucketName;
 
+    [Header("Identification And Authentication"), Category("AWS Cognito")]
     public string identityCode;
     public string newPassword;
     public string clientEmail;
-    private AmazonCognitoIdentityProviderClient provider;
 
+    [Header("AWS Providers")]
+    private AmazonCognitoIdentityProviderClient provider;
+    private AmazonS3Client s3Client;
+
+    [Header("AWS Credentials"), Category("Basic AWS Credentials")]
+
+    public string accessKey;
+    public string secretAccessKey;
     private void Awake()
     {
+        var creds = new BasicAWSCredentials(accessKey, secretAccessKey);
         var cognito = new AmazonCognitoIdentityProviderConfig
         {
-            RegionEndpoint = RegionEndpoint.GetBySystemName(region),
+            RegionEndpoint = RegionEndpoint.GetBySystemName(region)
         };
 
-        provider = new AmazonCognitoIdentityProviderClient(new AnonymousAWSCredentials(), cognito);
+        var s3config = new AmazonS3Config
+        {
+            RegionEndpoint = RegionEndpoint.GetBySystemName(region)
+        };
+
+        provider = new AmazonCognitoIdentityProviderClient(creds, cognito);
+        s3Client = new AmazonS3Client(creds, s3config);
     }
 
     private async void Start()
@@ -49,6 +75,7 @@ public class CognitoAuthService : MonoBehaviour
 
         try
         {
+        //  await ConfirmSignUp(email);
             var response = await provider.SignUpAsync(request);
             Debug.Log($"Sign up successful! Response Required: {response.UserConfirmed}");
         }
@@ -66,6 +93,9 @@ public class CognitoAuthService : MonoBehaviour
             AuthFlow = AuthFlowType.USER_PASSWORD_AUTH,
         };
 
+        Debug.Log(request.IsUnityNull()); // false it is
+        request.AuthParameters = new Dictionary<string, string>();
+
         request.AuthParameters.Add("USERNAME", email); // passing the email value to the AWS server
         request.AuthParameters.Add("PASSWORD", password); // passing the password value to the AWS server
 
@@ -73,6 +103,7 @@ public class CognitoAuthService : MonoBehaviour
         {
             var response = await provider.InitiateAuthAsync(request);
             Debug.Log($"Sign in successful! {response.AuthenticationResult.AccessToken}");
+            await StoreS3(bucketName, messageToSend);
         }
 
         catch(Exception ex)
@@ -82,12 +113,12 @@ public class CognitoAuthService : MonoBehaviour
 
     }
 
-    private async Task ConfirmSignUp(string code, string email)
+    private async Task ConfirmSignUp(string email, string accessCode)
     {
         var request = new ConfirmSignUpRequest
         {
             ClientId = clientId,
-            ConfirmationCode = code,
+            ConfirmationCode = accessCode,
             Username = email
         };
 
@@ -119,6 +150,31 @@ public class CognitoAuthService : MonoBehaviour
         catch (Exception ex) 
         {
             Debug.Log($"Forgot password failed! {ex.Message}");
+        }
+    }
+
+    private async Task StoreS3(string bucketName, string contentToPost)
+    {
+        string key = $"users/{Guid.NewGuid()}.txt";
+
+        var s3request = new PutObjectRequest
+        {
+            BucketName = bucketName,
+            Key = $"users/{Guid.NewGuid()}.txt",
+            ContentType = "text/plain",
+            ContentBody = contentToPost
+        };
+
+
+        try
+        {
+            PutObjectResponse response = await s3Client.PutObjectAsync(s3request);
+            Debug.Log("Stored data in S3 successfully!");
+        }
+
+        catch(Exception ex)
+        {
+            Debug.Log($"Store S3 - Error! | {ex.Message}");
         }
     }
 
