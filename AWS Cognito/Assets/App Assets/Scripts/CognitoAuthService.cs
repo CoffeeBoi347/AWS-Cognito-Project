@@ -14,6 +14,7 @@ using System.IO;
 
 public class CognitoAuthService : MonoBehaviour
 {
+    public static CognitoAuthService instance;
     public string messageToSend;
 
     [Header("Core Operations"), Category("AWS Core")]
@@ -38,6 +39,7 @@ public class CognitoAuthService : MonoBehaviour
     public string secretAccessKey;
     private void Awake()
     {
+        instance = this; // Dont destroy it on load
         var creds = new BasicAWSCredentials(accessKey, secretAccessKey);
         var cognito = new AmazonCognitoIdentityProviderConfig
         {
@@ -53,12 +55,7 @@ public class CognitoAuthService : MonoBehaviour
         s3Client = new AmazonS3Client(creds, s3config);
     }
 
-    private async void Start()
-    {
-        await SignIn(clientEmail, newPassword);
-    }
-
-    private async Task SignUp(string email, string password)
+    public async Task SignUp(string email, string password)
     {
         var request = new SignUpRequest
         {
@@ -85,7 +82,7 @@ public class CognitoAuthService : MonoBehaviour
         }
     }
 
-    private async Task SignIn(string email, string password)
+    public async Task SignIn(string email, string password)
     {
         var request = new InitiateAuthRequest
         {
@@ -134,7 +131,7 @@ public class CognitoAuthService : MonoBehaviour
         }
     }
 
-    private async Task ForgotPassword(string email)
+    public async Task ForgotPassword(string email)
     {
         ForgotPasswordRequest request = new ForgotPasswordRequest
         {
@@ -191,7 +188,7 @@ public class CognitoAuthService : MonoBehaviour
         try
         {
             var response = await provider.ConfirmForgotPasswordAsync(request);
-            Debug.Log($"Successful confirm forget passwor! STATUS: STATUS: {response.HttpStatusCode}");
+            Debug.Log($"Successful confirm forget password! STATUS: STATUS: {response.HttpStatusCode}");
         }
         catch (Exception e)
         {

@@ -34,6 +34,17 @@ public class UIManager : MonoBehaviour
     #region Initialize Pages
     private void Awake()
     {
+        if (instance == null)
+        {
+            instance = this;
+            DontDestroyOnLoad(this.gameObject); 
+        }
+        else
+        {
+            Destroy(gameObject); 
+            return;
+        }
+
         UIPageType[] pages = pageHolder.GetComponentsInChildren<UIPageType>(true);
 
         foreach(var page in pages)
@@ -47,6 +58,13 @@ public class UIManager : MonoBehaviour
             if (!pageTypeHolder.ContainsKey(page.pageType))
             {
                 pageTypeHolder[page.pageType] = cg;
+            }
+
+            if(page.pageType == UIPageTypes.Home)
+            {
+                cg.alpha = 1;
+                cg.interactable = true;
+                cg.blocksRaycasts = true;
             }
         }
     }
@@ -64,7 +82,6 @@ public class UIManager : MonoBehaviour
         if (oldScreen != null && oldScreen != newScreen)
         {
             await FadeOut(oldScreen);
-            return;
         }
 
         await FadeIn(newScreen);
@@ -85,6 +102,7 @@ public class UIManager : MonoBehaviour
         pg.blocksRaycasts = false;
 
         await pg.DOFade(0, fadeDuration).AsyncWaitForCompletion();
+        pg.alpha = 0;
     }
 
     #endregion

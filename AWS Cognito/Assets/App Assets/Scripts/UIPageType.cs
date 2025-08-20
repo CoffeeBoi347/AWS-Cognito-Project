@@ -7,6 +7,7 @@ public class UIPageType : MonoBehaviour
 
 public enum UIPageTypes
 {
+    None,
     Home,
     SignIn,
     SignUp,
