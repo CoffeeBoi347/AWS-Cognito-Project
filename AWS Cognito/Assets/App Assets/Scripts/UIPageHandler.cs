@@ -1,11 +1,16 @@
+using Amazon.CognitoIdentityProvider;
+using System.Collections;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UIPageHandler : MonoBehaviour
 {
     #region Singleton
     private static UIPageHandler instance;
+    public CognitoAuthService cognitoAuthService;
 
     [Header("Input Streams - Sign In"), Category("Sign In")]
 
@@ -21,11 +26,29 @@ public class UIPageHandler : MonoBehaviour
 
     public TMP_InputField forgetPasswordInpField;
 
+    [Header("Input Streams - Confirm OTP"), Category("Confirm OTP - Sign Up")]
+
+    public TMP_InputField userEmailText;
+    public TMP_InputField confirmOTPFieldText;
+
+    [Header("Input Streams - Confirm Forget Password OTP"), Category("Confirm Forget Password - OTP")]
+
+    public TMP_InputField userEmailField;
+    public TMP_InputField userCodeField;
+    public TMP_InputField userPasswordField;
+
     private void Awake()
     {
+        if(instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
         instance = this;
-        // Dont destroy on load
+        DontDestroyOnLoad(this.gameObject);
     }
+
     #endregion
 
     #region Basic Page Operations
@@ -43,63 +66,95 @@ public class UIPageHandler : MonoBehaviour
 
     public void OpenSignUpPage()
     {
-        UIManager.instance.OpenPage(UIPageTypes.SignUp);
+        try
+        {
+            UIManager.instance.OpenPage(UIPageTypes.SignUp);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"{e.Message}");
+        }
     }
 
     public void OpenForgetPasswordPage()
     {
-        UIManager.instance.OpenPage(UIPageTypes.ForgetPassword);
+        try
+        {
+            UIManager.instance.OpenPage(UIPageTypes.ForgetPassword);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"{e.Message}");
+        }
+    }
+
+    public void OpenConfirmOTP()
+    {
+        UIManager.instance.OpenPage(UIPageTypes.ConfirmOTPSignUp);
     }
     #endregion
 
     public async void ConfirmSignIn()
     {
-        if (signInInpField == null || passwordInpField == null)
-        {
-            Debug.LogError("Input fields are not assigned in Inspector!");
-            return;
-        }
-
-        if (CognitoAuthService.instance == null)
-        {
-            Debug.LogError("CognitoAuthService.instance is NULL!");
-            return;
-        }
-
         try
         {
-            await CognitoAuthService.instance.SignIn(
-                signInInpField.text, passwordInpField.text);
+            await CognitoAuthService.instance.SignIn(signInInpField.text, passwordInpField.text);
         }
-        catch (System.Exception e)
+
+        catch(System.Exception e)
         {
             Debug.LogError($"Couldn't sign in! {e.Message}");
         }
     }
 
-
     public async void ConfirmSignUp()
     {
-        try
+        if (string.IsNullOrEmpty(signUpInpField.text) || string.IsNullOrEmpty(signUpPasswordField.text))
         {
-            await CognitoAuthService.instance.SignUp(signUpInpField.text, signUpPasswordField.text);
+            Debug.LogError("Sign-Up Input Parameters Are NULL.");
+            return;
         }
 
-        catch(System.Exception e)
-        {
-            Debug.LogError($"Couldn't sign up! {e.Message}");
-        }
+        Debug.Log("Performing sign up!");
+        CognitoAuthService.instance.SignUp(signUpInpField.text, signUpPasswordField.text);
+
+        Debug.Log("[UIPageHandler] SignUp confirmed!");
     }
+
 
     public async void ConfirmForgetPassword()
     {
         try
         {
-            await CognitoAuthService.instance.ForgotPassword(forgetPasswordInpField.text);
+            CognitoAuthService.instance.ForgotPassword(forgetPasswordInpField.text);
         }
         catch (System.Exception e)
         {
             Debug.LogError($"Forget password error! {e.Message}");
+        }
+    }
+
+    public async void ConfirmOTPForgetPassword()
+    {
+        try
+        {
+            CognitoAuthService.instance.ConfirmForgetPassword(userEmailField.text, userCodeField.text, userPasswordField.text);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Confirm forget password error! {e.Message}");
+        }
+    }
+
+    public async void ConfirmOTPSignUp()
+    {
+        try
+        {
+            CognitoAuthService.instance.ConfirmSignUp(userEmailText.text, confirmOTPFieldText.text);
+        }
+        catch(System.Exception e)
+        {
+            Debug.LogError($"OTP Sign Up Error! {e.Message}");
         }
     }
 }
