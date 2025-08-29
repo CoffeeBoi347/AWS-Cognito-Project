@@ -13,5 +13,7 @@ public enum UIPageTypes
     SignUp,
     ConfirmOTPSignUp,
     ForgetPassword,
-    ConfirmOTPForgetPassword
+    ConfirmOTPForgetPassword,
+    GlobalChat,
+    CreateNickName
 }

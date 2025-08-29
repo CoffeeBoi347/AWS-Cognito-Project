@@ -1,4 +1,5 @@
 using Amazon.CognitoIdentityProvider;
+using Photon.Pun;
 using System.Collections;
 using System.ComponentModel;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ using UnityEngine.UI;
 public class UIPageHandler : MonoBehaviour
 {
     #region Singleton
-    private static UIPageHandler instance;
+    public static UIPageHandler instance;
     public CognitoAuthService cognitoAuthService;
 
     [Header("Input Streams - Sign In"), Category("Sign In")]
@@ -36,6 +37,10 @@ public class UIPageHandler : MonoBehaviour
     public TMP_InputField userEmailField;
     public TMP_InputField userCodeField;
     public TMP_InputField userPasswordField;
+
+    [Header("Input Streams - Create NickName"), Category("Create Nickname")]
+
+    public TMP_InputField createNicknameField;
 
     private void Awake()
     {
@@ -116,7 +121,7 @@ public class UIPageHandler : MonoBehaviour
         }
 
         Debug.Log("Performing sign up!");
-        CognitoAuthService.instance.SignUp(signUpInpField.text, signUpPasswordField.text);
+        await CognitoAuthService.instance.SignUp(signUpInpField.text, signUpPasswordField.text);
 
         Debug.Log("[UIPageHandler] SignUp confirmed!");
     }
@@ -156,5 +161,12 @@ public class UIPageHandler : MonoBehaviour
         {
             Debug.LogError($"OTP Sign Up Error! {e.Message}");
         }
+    }
+
+    public void CreateNickName()
+    {
+        PhotonNetworkSettings.instance.ConnectToServer(createNicknameField.text);
+        PhotonNetwork.NickName = createNicknameField.text;
+        UIManager.instance.OpenPage(UIPageTypes.GlobalChat);
     }
 }

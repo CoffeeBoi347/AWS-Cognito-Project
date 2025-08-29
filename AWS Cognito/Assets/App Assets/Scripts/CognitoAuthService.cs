@@ -29,6 +29,7 @@ public class CognitoAuthService : MonoBehaviour
     public string identityCode;
     public string newPassword;
     public string clientEmail;
+    public string identityToken;
 
     [Header("AWS Providers")]
     private AmazonCognitoIdentityProviderClient provider;
@@ -42,6 +43,7 @@ public class CognitoAuthService : MonoBehaviour
     [Header("AWS DynamoDB"), Category("AmazonDynamoDB")]
 
     public string tableName;
+    public string messageHolderTableName;
 
     [Header("Unit Testing Booleans")]
 
@@ -91,22 +93,6 @@ public class CognitoAuthService : MonoBehaviour
 
     public async Task SignUp(string email, string password)
     {
-        if (string.IsNullOrWhiteSpace(clientId))
-        {
-            Debug.LogError("[Cognito] SignUp failed: clientId is null/empty.");
-            return;
-        }
-        if (provider == null)
-        {
-            Debug.LogError("[Cognito] SignUp failed: provider is null (Awake() likely failed).");
-            return;
-        }
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        {
-            Debug.LogError("[Cognito] SignUp failed: email/password missing.");
-            return;
-        }
-
         var request = new SignUpRequest
         {
             ClientId = clientId,
@@ -163,7 +149,9 @@ public class CognitoAuthService : MonoBehaviour
 
             if(response.AuthenticationResult != null)
             {
+                identityToken = response.AuthenticationResult.IdToken;
                 Debug.Log($"Sign In Successful! RESULT: {response.AuthenticationResult} HTTPS CODE: {response.HttpStatusCode}");
+                UIManager.instance.OpenPage(UIPageTypes.CreateNickName);
                 await AddUser(tableName, response.AuthenticationResult.IdToken, email, true);
                 return;
             }
@@ -314,6 +302,30 @@ public class CognitoAuthService : MonoBehaviour
         catch(Exception e)
         {
             Debug.LogError($"Error inserting item in {tableName} table. {e.Message}");
+        }
+    }
+
+    public async Task StoreMessage(string tableName, string userID, string userEmail, string userMessage)
+    {
+        try
+        {
+            var request = new PutItemRequest
+            {
+                TableName = tableName,
+                Item = new Dictionary<string, AttributeValue>
+                {
+                    { "UserID", new AttributeValue { S = userID } },
+                    { "email", new AttributeValue { S = userEmail } },
+                    { "message", new AttributeValue { S = messageToSend } }
+                }
+            };
+
+            await dynamoDBClient.PutItemAsync(request);
+        }
+
+        catch(Exception e)
+        {
+            Debug.LogError($"Error inserting item in {tableName}. {e.Message}");
         }
     }
 
