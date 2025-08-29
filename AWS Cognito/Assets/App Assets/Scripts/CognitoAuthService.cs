@@ -176,6 +176,10 @@ public class CognitoAuthService : MonoBehaviour
                 if(challengeResponse.AuthenticationResult != null)
                 {
                     Debug.Log($"Sign In Successful! RESULT: {response.AuthenticationResult} HTTPS CODE: {response.HttpStatusCode}");
+
+                    clientEmail = email;
+                    clientId = challengeResponse.AuthenticationResult.IdToken;
+                    newPassword = password;
                     return;
                 }
 
