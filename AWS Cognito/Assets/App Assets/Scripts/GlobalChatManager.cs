@@ -12,6 +12,10 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
     private string userName;
     public string textBoxObjName;
 
+    [Header("Message Type")]
+    
+    public MessageType messageType = MessageType.Text;
+
     [Header("Message Holders")]
     public Transform userMessagesHolder;
 
@@ -29,8 +33,17 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
 
         messageSend = userMessageInpField.text;
         userName = PhotonNetwork.NickName;
-        photonView.RPC("ReceiveMessage", RpcTarget.All, userName, messageSend);
 
+        switch (messageType)
+        {
+            case MessageType.Image:
+                //photonView.RPC("ReceiveMessageImage", RpcTarget.All, userName, FilePicker.Instance.rawImage);
+                break;
+            case MessageType.Text:
+                photonView.RPC("ReceiveMessage", RpcTarget.All, userName, messageSend);
+                break;
+
+        }
         await CognitoAuthService.instance.StoreMessage(
             CognitoAuthService.instance.messageHolderTableName,
             CognitoAuthService.instance.identityToken,
@@ -53,6 +66,12 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
 
     public void UserOnlineField()
     {
-        userOnlineField.text = $"Connected Users: {PhotonNetwork.CountOfPlayersInRooms}";
+        userOnlineField.text = $"Connected Users: {PhotonNetwork.CountOfPlayersInRooms + 1}";
     }
+}
+
+public enum MessageType
+{
+    Text,
+    Image
 }

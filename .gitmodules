@@ -1,0 +1,6 @@
+[submodule "AWS Cognito/Assets/StandaloneFileBrowser"]
+	path = AWS Cognito/Assets/StandaloneFileBrowser
+	url = https://github.com/gkngkc/UnityStandaloneFileBrowser.git
+[submodule "AWS Cognito/Assets/LeanTween"]
+	path = AWS Cognito/Assets/LeanTween
+	url = https://github.com/dentedpixel/LeanTween.git
