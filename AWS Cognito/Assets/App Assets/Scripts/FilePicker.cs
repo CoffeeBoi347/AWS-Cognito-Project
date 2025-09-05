@@ -43,7 +43,8 @@ public class FilePicker : MonoBehaviourPunCallbacks
         var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "jpg", false);
         if (paths.Length > 0 && File.Exists(paths[0]))
         {
-            if (paths.Length > 100 * 1024) // 100 KB
+            FileInfo fileInfo = new FileInfo(paths[0]);
+            if (fileInfo.Length > 30 * 1024) // 100 KB
             {
                 Debug.LogError("Image too large. Max 100KB allowed.");
                 return;
