@@ -2,8 +2,8 @@ using UnityEngine;
 using SFB;
 using System.IO;
 using UnityEngine.UI;
-
-public class FilePicker : MonoBehaviour
+using Photon.Pun;
+public class FilePicker : MonoBehaviourPunCallbacks
 {
     public static FilePicker _instance;
     public bool hasLoadImage;
@@ -43,6 +43,12 @@ public class FilePicker : MonoBehaviour
         var paths = StandaloneFileBrowser.OpenFilePanel("Open File", "", "jpg", false);
         if (paths.Length > 0 && File.Exists(paths[0]))
         {
+            if (paths.Length > 100 * 1024) // 100 KB
+            {
+                Debug.LogError("Image too large. Max 100KB allowed.");
+                return;
+            }
+
             GlobalChatManager.Instance.messageType = MessageType.Image;
             hasLoadImage = true;
 
@@ -77,15 +83,25 @@ public class FilePicker : MonoBehaviour
         var seq = LeanTween.sequence();
 
         seq.append(() => notificationPanel.SetActive(true));
-        seq.append(LeanTween.scale(notificationPanel, Vector3.one, 0.1f).setEaseInBounce());
-        seq.append(0.8f);
-        seq.append(LeanTween.scale(notificationPanel, Vector3.zero, 0.1f).setEaseOutBounce());
+        seq.append(LeanTween.scale(notificationPanel, Vector3.one, 0.5f).setEaseInBounce());
+        seq.append(1.5f);
+        seq.append(LeanTween.scale(notificationPanel, Vector3.zero, 0.5f).setEaseOutBounce());
         seq.append(() => notificationPanel.SetActive(false));
     }
 
     public void CloseNotificationsPanel()
     {
         notificationPanel.SetActive(false);
+    }
+
+    public void ResetMessageImage()
+    {
+        if(GlobalChatManager.Instance.messageType == MessageType.Image && Input.GetKeyDown(KeyCode.Return))
+        {
+            GlobalChatManager.Instance.messageType = MessageType.Text;
+            hasLoadImage = false;
+            rawImage.texture = null;
+        }
     }
     #endregion
 }

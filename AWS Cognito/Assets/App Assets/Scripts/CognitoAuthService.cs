@@ -152,6 +152,8 @@ public class CognitoAuthService : MonoBehaviour
                 identityToken = response.AuthenticationResult.IdToken;
                 Debug.Log($"Sign In Successful! RESULT: {response.AuthenticationResult} HTTPS CODE: {response.HttpStatusCode}");
                 UIManager.instance.OpenPage(UIPageTypes.CreateNickName);
+                AutoSignIn.instance.StoreUserDetails(email, password);
+
                 await AddUser(tableName, response.AuthenticationResult.IdToken, email, true);
                 return;
             }

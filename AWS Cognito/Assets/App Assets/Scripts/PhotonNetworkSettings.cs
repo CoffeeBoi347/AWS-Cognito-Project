@@ -49,7 +49,14 @@ public class PhotonNetworkSettings : MonoBehaviourPunCallbacks
         try
         {
             PhotonNetwork.NickName = userName;
+            PlayerPrefs.SetString("UserNickName", userName);
+            PlayerPrefs.Save();
             PhotonNetwork.ConnectUsingSettings();
+
+            if(AutoSignIn.instance.autoSignInState == AutoSignInState.True)
+            {
+                UIManager.instance.OpenPage(UIPageTypes.GlobalChat);
+            }
         }
         catch(System.Exception e)
         {

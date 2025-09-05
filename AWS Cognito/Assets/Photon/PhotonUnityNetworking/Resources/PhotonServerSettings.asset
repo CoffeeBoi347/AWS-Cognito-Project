@@ -43,6 +43,8 @@ MonoBehaviour:
   - SendMessageOverNetwork
   - ReceiveMessage
   - SendMessageImage
+  - ReceiveMessageImage
+  - LoadFile
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 1

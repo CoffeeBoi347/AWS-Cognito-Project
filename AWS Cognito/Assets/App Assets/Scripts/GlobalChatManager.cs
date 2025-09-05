@@ -1,6 +1,8 @@
 using Photon.Pun;
+using System.Security.Cryptography;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GlobalChatManager : Singleton<GlobalChatManager>
 {
@@ -11,6 +13,7 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
     private string messageSend;
     private string userName;
     public string textBoxObjName;
+    public string textBoxObjImgName;
 
     [Header("Message Type")]
     
@@ -25,6 +28,8 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
         {
             SendMessageGC();
         }
+
+        FilePicker.Instance.ResetMessageImage();
     }
 
     public async void SendMessageGC()
@@ -37,7 +42,14 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
         switch (messageType)
         {
             case MessageType.Image:
-                //photonView.RPC("ReceiveMessageImage", RpcTarget.All, userName, FilePicker.Instance.rawImage);
+                Texture2D tex = FilePicker.Instance.rawImage.texture as Texture2D;
+                if (tex == null)
+                {
+                    Debug.LogError("RawImage.texture is not a Texture2D!");
+                }
+                byte[] bytes = tex.EncodeToPNG();
+
+                photonView.RPC("ReceiveMessageImage", RpcTarget.All, userName, messageSend, bytes);
                 break;
             case MessageType.Text:
                 photonView.RPC("ReceiveMessage", RpcTarget.All, userName, messageSend);
@@ -52,6 +64,14 @@ public class GlobalChatManager : Singleton<GlobalChatManager>
         );
 
         userMessageInpField.text = string.Empty;
+    }
+
+    [PunRPC]
+    private void ReceiveMessageImage(string senderName, string messageToSend, byte[] bytes)
+    {
+        GameObject textBoxObj = PhotonNetwork.Instantiate(textBoxObjImgName, Vector3.zero, Quaternion.identity);
+        textBoxObj.transform.SetParent(userMessagesHolder, false);
+        textBoxObj.GetPhotonView().RPC("SendMessageImage", RpcTarget.All, senderName, messageToSend, bytes);
     }
 
     [PunRPC]

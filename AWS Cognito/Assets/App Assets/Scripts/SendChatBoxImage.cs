@@ -10,11 +10,13 @@ public class SendChatBoxImage : MonoBehaviourPun
     [SerializeField] private TMP_Text messageField;
 
     [PunRPC]
-    public void SendMessageImage(string username, string message, Texture2D image)
+    public void SendMessageImage(string username, string message, byte[] image)
     {
         usernameField.text = username;
         messageField.text = message;
-        userImage.texture = image;
-        userImage.SetNativeSize();
+
+        Texture2D tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        tex.LoadImage(image);
+        userImage.texture = tex;
     }
 }
